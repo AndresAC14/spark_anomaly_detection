@@ -1,6 +1,7 @@
 from minio import Minio
 from utils import get_streaming_data
 import threading
+import sys
 
 client = Minio(
     "localhost:9000",
@@ -17,6 +18,7 @@ DIR_TRAFFIC = "traffic-data"
 DIR_POLLUTION = "pollution-data"
 traffic_sleep_time = 300  # 5 min
 pollution_sleep_time = 1200  # 20 min
+
 
 # Start both streams in parallel
 threading.Thread(
