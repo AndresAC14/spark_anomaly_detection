@@ -11,11 +11,15 @@ Real-Time Anomaly Detection in Traffic and Pollution Data Stream with Spark Stru
 
 Run docker for MinIO:
 
-````sh
-docker run -p 9000:9000 -p 9001:9001   quay.io/minio/minio server /data --console-address ":9001"
-````
+```sh
+docker run -p 9000:9000 -p 9001:9001 -v ~\backend\minio-data:/data quay.io/minio/minio server /data --console-address ":9001"
+```
 
 Run docker for data extraction service:
+
+```sh
+#to-do
+```
 
 
 
