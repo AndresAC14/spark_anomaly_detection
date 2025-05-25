@@ -1,32 +1,27 @@
-from datetime import datetime
+import os
 import time
+from datetime import datetime
 import urllib.request
-from minio import Minio
-from io import BytesIO
 
-
-def get_streaming_data(client: Minio, url: str, directory: str, sleep_time: int):
-    # Ensure bucket exists
-    if not client.bucket_exists(directory):
-        client.make_bucket(directory)
+def get_streaming_data(url: str, folder: str, sleep_time: int):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
     while True:
-        time_stamp = datetime.now().isoformat()
+        time_stamp = datetime.now().isoformat().replace(":", "-")
         file_name = f"{time_stamp}.xml"
+        file_path = os.path.join(folder, file_name)
 
-        # Download the file content into memory
-        with urllib.request.urlopen(url) as response:
-            data = response.read()
+        try:
+            with urllib.request.urlopen(url) as response:
+                data = response.read()
 
-        # Upload to MinIO
-        client.put_object(
-            directory,
-            file_name,
-            data=BytesIO(data),
-            length=len(data),
-            content_type="application/xml",
-        )
+            with open(file_path, "wb") as f:
+                f.write(data)
 
-        print(f"Uploaded {file_name} to bucket '{directory}'")
+            print(f"Saved {file_path}")
+
+        except Exception as e:
+            print(f"Error saving file: {e}")
 
         time.sleep(sleep_time)
