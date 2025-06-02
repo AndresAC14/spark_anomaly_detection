@@ -4,9 +4,7 @@ from datetime import datetime
 import urllib.request
 
 def get_streaming_data(url: str, folder: str, sleep_time: int):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
+    
     while True:
         time_stamp = datetime.now().isoformat().replace(":", "-")
         file_name = f"{time_stamp}.xml"

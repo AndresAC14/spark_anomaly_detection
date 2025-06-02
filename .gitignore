@@ -175,3 +175,8 @@ cython_debug/
 
 # MinIO
 minio-data
+
+# Database
+backend/database/pollution_data
+backend/database/pollution_historical_data_2017_2024
+backend/database/traffic_data
