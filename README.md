@@ -21,22 +21,28 @@ Run docker for data extraction service:
 
 # Services
 
-🚀 INSTRUCCIONES PARA LEVANTAR TODO
-Lanzar la API:
+## Launch API:
 
-lua
-Copiar
-Editar
-uvicorn backend.api.main:app --reload
-Ejecutar el proceso Spark
+```sh
+cd spark_anomaly_detection\backend
+fastapi dev api/main.py
+```
 
-bash
-Copiar
-Editar
-python backend/spark_process.py
-Levantar el frontend Streamlit
+## Launch Streaming Data Extraction
+```sh
+cd spark_anomaly_detection\backend
+python extract_service\streaming.py
+```
 
-arduino
-Copiar
-Editar
+
+## Launch Spark
+
+```sh
+cd spark_anomaly_detection\backend
+python ml-service/anomaly_detection.py
+```
+## Launch frontend with streamlit
+
+```sh
 streamlit run frontend/app.py
+```
