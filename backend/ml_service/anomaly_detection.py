@@ -3,6 +3,8 @@ from pyspark.sql.functions import col, hour, to_timestamp
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType
 import pickle
 # import requests
+import time
+
 # Initialize Spark session
 spark = SparkSession.builder.appName("PollutionPredictionStreaming").getOrCreate()
 spark.sparkContext.setLogLevel("WARN")
@@ -18,9 +20,12 @@ schema = StructType([
     StructField("VALOR_CONTAMINACION", DoubleType(), True)
 ])
 
-# Load the pre-trained model
+# Load the pre-trained models
 with open('database\\models\\pollution_model.pkl', 'rb') as f:
-    model = pickle.load(f)
+    pollution_model = pickle.load(f)
+
+with open('database\\models\\traffic_model.pkl', 'rb') as f:
+    traffic_model = pickle.load(f)
 
 # Read CSV files from the folder as they arrive
 input_path = "database\\streaming_data"
@@ -32,8 +37,18 @@ df_stream = (
 )
 
 # Preprocess: extract hour from FECHA_HORA
-# df_stream = df_stream.withColumn("HORA", hour(to_timestamp(col("FECHA_HORA"), "yyyy-MM-dd")))
 df_stream = df_stream.withColumn("HORA", hour(to_timestamp(col("FECHA_HORA"), "yyyy-MM-dd HH:mm:ss")))
+
+def send_alert(y_true, y_pred, type: str):
+    for actual, predicted in zip(y_true, y_pred):
+        percent_diff = abs(predicted - actual) / abs(actual) * 100
+
+        print(f"Actual: {actual} vs Predicted: {predicted} \n Diff% {percent_diff}")
+        if percent_diff > 15:
+            payload = {"expected": float(actual), "predicted": float(predicted), "type": type}
+            print(f"ALERT POLLUTION: {payload}")
+            # Optionally send alert
+            # requests.post("http://localhost:8000/alert", json=payload)
 
 def process_batch(df, epoch_id):
     if df.count() == 0:
@@ -41,22 +56,45 @@ def process_batch(df, epoch_id):
 
     pandas_df = df.select("HORA", "INTENSIDAD", "OCUPACION", "CARGA", "VALOR_CONTAMINACION").toPandas()
 
-    feature_cols = ["HORA", "INTENSIDAD", "OCUPACION", "CARGA"]
-    X = pandas_df[feature_cols]
-    y_true = pandas_df["VALOR_CONTAMINACION"]
+    # --- Pollution Prediction ---
+    pollution_features = ["HORA", "INTENSIDAD", "OCUPACION", "CARGA"]
+    X_pollution = pandas_df[pollution_features]
+    y_true_pollution = pandas_df["VALOR_CONTAMINACION"]
+    y_pred_pollution = pollution_model.predict(X_pollution)
 
-    y_pred = model.predict(X)
+    send_alert(y_true_pollution, y_pred_pollution, "pollution")
 
-    for actual, predicted in zip(y_true, y_pred):
-        if abs(predicted - actual) > 0.1:
-            payload = {"expected": actual, "predicted": predicted}
-            # fix: QUE NO SALGA NP.FLOAT(N.0000000000)
-            print(f"ALERT: {payload}")
-            # Uncomment to send alert to FastAPI
-            # try:
-            #     requests.post("http://localhost:8000/alert", json=payload)
-            # except Exception as e:
-            #     print(f"Error sending alert: {e}")
+
+    # for actual, predicted in zip(y_true_pollution, y_pred_pollution):
+    #     percent_diff = abs(predicted - actual) / abs(actual) * 100
+
+    #     print(f"Actual: {actual} vs Predicted: {predicted} \n Diff% {percent_diff}")
+    #     if percent_diff > 15:
+    #         payload = {"expected": float(actual), "predicted": float(predicted), "type": "contaminacion"}
+    #         print(f"ALERT POLLUTION: {payload}")
+    #         # Optionally send alert
+    #         # requests.post("http://localhost:8000/alert", json=payload)
+
+
+    # --- Traffic Prediction ---
+    traffic_features = ["HORA","VALOR_CONTAMINACION", "OCUPACION", "CARGA"]
+    X_traffic = pandas_df[traffic_features]
+    y_true_traffic = pandas_df["INTENSIDAD"]
+    y_pred_traffic = traffic_model.predict(X_traffic)
+
+    send_alert(y_true_traffic, y_pred_traffic, "traffic")
+
+    # for actual, predicted in zip(y_true_traffic, y_pred_traffic):
+    #     percent_diff = abs(predicted - actual) / abs(actual) * 100
+
+    #     print(f"Actual: {actual} vs Predicted: {predicted} \n Diff% {percent_diff}")
+    #     if percent_diff > 15:
+    #         payload = {"expected": float(actual), "predicted": float(predicted), "type": "intensidad"}
+    #         print(f"ALERT TRAFFIC: {payload}")
+    #         # Optionally send alert
+    #         # requests.post("http://localhost:8000/alert", json=payload)
+
+    time.sleep(30)
 
 # Start the streaming query
 query = df_stream.writeStream.foreachBatch(process_batch).start()
