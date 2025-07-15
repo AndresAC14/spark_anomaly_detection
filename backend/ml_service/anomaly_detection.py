@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, hour, to_timestamp
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType
 import pickle
-# import requests
+import requests
 import time
 
 # Initialize Spark session
@@ -44,11 +44,13 @@ def send_alert(y_true, y_pred, type: str):
         percent_diff = abs(predicted - actual) / abs(actual) * 100
 
         print(f"Actual: {actual} vs Predicted: {predicted} \n Diff% {percent_diff}")
-        if percent_diff > 15:
+        if percent_diff > 30:
             payload = {"expected": float(actual), "predicted": float(predicted), "type": type}
             print(f"ALERT POLLUTION: {payload}")
-            # Optionally send alert
-            # requests.post("http://localhost:8000/alert", json=payload)
+            try:
+                requests.post("http://localhost:8000/alert", json=payload)
+            except Exception as e:
+                print(f"Error sending alert: {e}")
 
 def process_batch(df, epoch_id):
     if df.count() == 0:
@@ -65,17 +67,6 @@ def process_batch(df, epoch_id):
     send_alert(y_true_pollution, y_pred_pollution, "pollution")
 
 
-    # for actual, predicted in zip(y_true_pollution, y_pred_pollution):
-    #     percent_diff = abs(predicted - actual) / abs(actual) * 100
-
-    #     print(f"Actual: {actual} vs Predicted: {predicted} \n Diff% {percent_diff}")
-    #     if percent_diff > 15:
-    #         payload = {"expected": float(actual), "predicted": float(predicted), "type": "contaminacion"}
-    #         print(f"ALERT POLLUTION: {payload}")
-    #         # Optionally send alert
-    #         # requests.post("http://localhost:8000/alert", json=payload)
-
-
     # --- Traffic Prediction ---
     traffic_features = ["HORA","VALOR_CONTAMINACION", "OCUPACION", "CARGA"]
     X_traffic = pandas_df[traffic_features]
@@ -83,16 +74,6 @@ def process_batch(df, epoch_id):
     y_pred_traffic = traffic_model.predict(X_traffic)
 
     send_alert(y_true_traffic, y_pred_traffic, "traffic")
-
-    # for actual, predicted in zip(y_true_traffic, y_pred_traffic):
-    #     percent_diff = abs(predicted - actual) / abs(actual) * 100
-
-    #     print(f"Actual: {actual} vs Predicted: {predicted} \n Diff% {percent_diff}")
-    #     if percent_diff > 15:
-    #         payload = {"expected": float(actual), "predicted": float(predicted), "type": "intensidad"}
-    #         print(f"ALERT TRAFFIC: {payload}")
-    #         # Optionally send alert
-    #         # requests.post("http://localhost:8000/alert", json=payload)
 
     time.sleep(30)
 

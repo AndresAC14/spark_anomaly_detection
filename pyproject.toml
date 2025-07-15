@@ -6,16 +6,22 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "boto3>=1.38.23",
+    "fastapi[standard]>=0.116.1",
     "httpx>=0.28.1",
     "lightgbm>=4.6.0",
     "lxml>=5.4.0",
     "matplotlib>=3.10.3",
     "minio>=7.2.15",
     "pandas>=2.2.3",
+    "pydantic>=2.11.7",
     "pyproj>=3.7.1",
     "pyspark>=3.5.5",
+    "requests>=2.32.4",
     "ruff>=0.11.8",
     "scikit-learn>=1.7.0",
     "statsmodels>=0.14.5",
+    "streamlit>=1.46.1",
+    "streamlit-autorefresh>=1.0.1",
+    "streamlit-extras>=0.7.5",
     "xgboost>=3.0.2",
 ]

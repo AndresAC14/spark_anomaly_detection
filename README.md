@@ -20,3 +20,23 @@ Run docker for data extraction service:
 
 
 # Services
+
+🚀 INSTRUCCIONES PARA LEVANTAR TODO
+Lanzar la API:
+
+lua
+Copiar
+Editar
+uvicorn backend.api.main:app --reload
+Ejecutar el proceso Spark
+
+bash
+Copiar
+Editar
+python backend/spark_process.py
+Levantar el frontend Streamlit
+
+arduino
+Copiar
+Editar
+streamlit run frontend/app.py
