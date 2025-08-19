@@ -1,0 +1,45 @@
+services:
+  api:
+    build: ./backend/api
+    container_name: fastapi_service
+    ports:
+      - "8000:8000"
+    networks:
+      - app_network
+
+  streaming:
+    build: ./backend/extract_service
+    container_name: streaming_service
+    depends_on:
+      - api
+    volumes:
+      - ./backend/database:/app/database
+    networks:
+      - app_network
+
+  spark:
+    build: ./backend/ml_service
+    container_name: spark_service
+    depends_on:
+      - api
+      - streaming
+    environment:
+      - PYSPARK_PYTHON=python3.11
+    volumes:
+      - ./backend/database:/app/database
+    networks:
+      - app_network
+
+  frontend:
+    build: ./frontend
+    container_name: streamlit_service
+    depends_on:
+      - api
+    ports:
+      - "8501:8501"
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
