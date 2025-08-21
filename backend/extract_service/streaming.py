@@ -7,13 +7,13 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 # Load the full dataset
-df = pd.read_csv("database\\model_data.csv", parse_dates=['FECHA_HORA'])
+df = pd.read_csv("database/model_data.csv", parse_dates=['FECHA_HORA'])
 
 # Filter data from January 1, 2024 onwards
 df_2024 = df[df['FECHA_HORA'] >= '2024-01-01']
 
 # Output directory for hourly CSVs
-output_dir = 'database\\streaming_data'
+output_dir = "database/streaming_data"
 os.makedirs(output_dir, exist_ok=True)
 
 logging.info(f"Starting data streaming starting from 2024-01-01...")
@@ -29,6 +29,8 @@ for timestamp, group in df_2024.groupby('FECHA_HORA'):
         'CARGA': 'mean',
         'VALOR_CONTAMINACION': 'mean'
     }).reset_index()
+    
+    group['FECHA_HORA'] = group['FECHA_HORA'].dt.strftime('%Y-%m-%d %H:%M:%S')
     
     # Save the current group to CSV
     group.to_csv(filepath, index=False)

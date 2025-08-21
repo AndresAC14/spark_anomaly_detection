@@ -7,6 +7,8 @@ import time
 import pandas as pd
 import math
 
+API_URL = "http://api:8000" 
+
 # Initialize Spark session
 spark = SparkSession.builder.appName("PollutionPredictionStreaming").getOrCreate()
 spark.sparkContext.setLogLevel("WARN")
@@ -23,14 +25,14 @@ schema = StructType([
 ])
 
 # Load the pre-trained models
-with open('database\\models\\pollution_model.pkl', 'rb') as f:
+with open("database/models/pollution_model.pkl", 'rb') as f:
     pollution_model = pickle.load(f)
 
-with open('database\\models\\traffic_model.pkl', 'rb') as f:
+with open("database/models/traffic_model.pkl", 'rb') as f:
     traffic_model = pickle.load(f)
 
 # Read CSV files from the folder as they arrive
-input_path = "database\\streaming_data"
+input_path = "database/streaming_data"
 df_stream = (
     spark.readStream \
     .option("maxFilesPerTrigger", 1) \
@@ -41,19 +43,6 @@ df_stream = (
 
 # Preprocess: extract hour from FECHA_HORA
 df_stream = df_stream.withColumn("HORA", hour(to_timestamp(col("FECHA_HORA"), "yyyy-MM-dd HH:mm:ss")))
-
-# def send_alert(hour, y_true, y_pred, type: str):
-#     for actual, predicted in zip(y_true, y_pred):
-#         percent_diff = abs(predicted - actual) / abs(actual) * 100
-
-#         print(f"Actual: {actual} vs Predicted: {predicted} \n Diff% {percent_diff}")
-#         if percent_diff > 30:
-#             payload = {"expected": float(actual), "predicted": float(predicted), "type": type, "hour": hour}
-#             print(f"ALERT POLLUTION: {payload}")
-#             try:
-#                 requests.post("http://localhost:8000/alert", json=payload)
-#             except Exception as e:
-#                 print(f"Error sending alert: {e}")
 
 def is_valid_number(value):
     return pd.notnull(value) and not math.isinf(value)
@@ -74,14 +63,14 @@ def send_data(y_true, y_pred, type: str, hour: int):
 
         
         try:
-            requests.post("http://localhost:8000/data", json=payload)
+            requests.post(f"{API_URL}/data", json=payload)
         except Exception as e:
             print(f"Error sending data: {e}")
 
         percent_diff = abs(predicted - actual) / abs(actual) * 100
         if percent_diff > 15:
             try:
-                requests.post("http://localhost:8000/alert", json=payload)
+                requests.post(f"{API_URL}/alert", json=payload)
             except Exception as e:
                 print(f"Error sending alert: {e}")
 
