@@ -14,8 +14,6 @@ spark = SparkSession.builder.appName("PollutionPredictionStreaming").getOrCreate
 spark.sparkContext.setLogLevel("WARN")
 
 # Define the schema for incoming CSV files
-from pyspark.sql.types import StructType, StructField, StringType, DoubleType
-
 schema = StructType([
     StructField("FECHA_HORA", StringType(), True),
     StructField("INTENSIDAD", DoubleType(), True),

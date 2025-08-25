@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 from streamlit_autorefresh import st_autorefresh
 
-API_URL = "http://localhost:8000"
+API_URL = "http://api:8000"
 
 st.set_page_config(page_title="Real-Time Dashboard", page_icon="📊")
 

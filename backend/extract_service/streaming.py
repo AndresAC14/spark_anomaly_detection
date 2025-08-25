@@ -16,7 +16,7 @@ df_2024 = df[df['FECHA_HORA'] >= '2024-01-01']
 output_dir = "database/streaming_data"
 os.makedirs(output_dir, exist_ok=True)
 
-logging.info(f"Starting data streaming starting from 2024-01-01...")
+logging.info("Starting data streaming starting from 2024-01-01...")
 
 # Group by timestamp (hourly granularity)
 for timestamp, group in df_2024.groupby('FECHA_HORA'):
